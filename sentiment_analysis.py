@@ -12,13 +12,13 @@
 #         - find quotes that have synonyms or words from sentence
 #         - return the quotes
 # 3. Use the TDIDF to find the most meaningful words in a sentence.
-
-# In[171]:
-
+#4. Discouraging quotes
+#    - If "I" in sentence and negative word in sentence and negative word is a verb
 
 import nltk
 #nltk.download('sentiwordnet')
 from nltk.corpus import sentiwordnet as swn
+from nltk.corpus import wordnet
 
 def get_negs(sentence):
     """Gets the negative words in a sentence.
@@ -35,15 +35,26 @@ def get_negs(sentence):
     text = nltk.word_tokenize(sentence)
     tags = nltk.pos_tag(text)
     neg_list = []
-
+    barred = ['fuck','fucking']
+    
+    #load negative word data
+    f = open('negative_words.txt')
+    neg_db = f.readlines()
+    neg_db = [w.strip() for w in neg_db]
+    f.close()
+    
     for t in tags:
         #list of sentiment sets e.g <breakdown.n.03: PosScore=0.0 NegScore=0.25>
         neg = list(swn.senti_synsets(t[0]))
-
-        #filter words with 50% negative rating
-        check_negativity = [t[0] for n in neg if n.neg_score()>=0.5]
-        if t[0] in check_negativity:
-            neg_list.append(t[0])
+        word = t[0]
+        
+        #filter words with 50% negative rating     
+        check_negativity = [word for n in neg if n.neg_score()>=0.5]
+        neg = list(swn.senti_synsets(t[0]))
+        word = t[0]
+            
+        if ((word in check_negativity) and (word not in barred)) or (word in neg_db):
+            neg_list.append(word)
 
     return list(set(neg_list))
 
@@ -83,10 +94,6 @@ def find_synonyms(my_list):
         count = 0
     return d
 
-
-# In[167]:
-
-
 def find_quotes(neg_words, sentence, q_file):
     """Finds relevant quotes that corelate to the 
     sentence and negative words.
@@ -109,29 +116,6 @@ def find_quotes(neg_words, sentence, q_file):
     quotes = [q.strip() for q in quotes]
     f.close()
     
-
-
-# In[182]:
-
-
-s = 'Today sucks and is a bad day!'
-negs = get_negs(s)
-syns_n = find_synonyms(negs)
-syns_s = find_synonyms(s.split())
-
-
-# In[64]:
-
-
-f = open('quotes.txt', 'r')
-quotes = f.readlines()
-quotes = [q.strip() for q in quotes]
-f.close()
-
-
-# In[198]:
-
-
 def get_quotes(syns, quotes):
     """Finds relevant quotes that corelate to the 
     sentence and negative words.
@@ -159,39 +143,8 @@ def get_quotes(syns, quotes):
     for q in quotes:
         for s in syns:
             if s in q:
-                    yield q  
-
-
-# In[199]:
-
-
-len(list(get_quotes(syns_n, quotes)))
-
-
-# In[204]:
-
-
-all_syns = []
-relevant = []
-
-#combine lists and add key to list
-for k in syns:
-    all_syns.append(k)
-    all_syns = syns[k] + all_syns
-
-for q in quotes:
-    for s in syns:
-        if s in q: 
-            q
-
-
-# In[226]:
-
-
-text = nltk.word_tokenize('Save your skin from the corrosive acids from the mouths of toxic people. ' +
-                           'Someone who just helped you to speak evil about another person can later ' +
-                          'help another person to speak evil about you.')
-
+                    yield q
+                    
 def verbs_and_negs(text):
     v = []
     neg_list = []
@@ -214,27 +167,32 @@ def verbs_and_negs(text):
 
     return (v, list(set(neg_list)))
 
-
-# In[227]:
-
-
-v_n = verbs_and_negs(text)
-
-
-# In[228]:
-
-
-v_n[1]
-
-
-# In[229]:
-
-
-v_n[0]
-
-
-# In[232]:
-
-
-text.split('')
-
+def is_discourage(sentence):
+    """Checks if a sentence should be discouraged.
+    
+    Parameters
+    ----------  
+    sentence    string: Sentence that will be analyzed.
+    
+    Returns
+    -------
+    discourage   bool: Wether it should be discouraged.
+    """
+    
+    sent_list = sentence.split(' ')
+    sent_list = [s.lower() for s in sent_list]
+    negs = get_negs(sentence)
+    discourage = False          #initialize discourage to false
+    print(negs)
+    text = nltk.word_tokenize(sentence)
+    tags = nltk.pos_tag(text)
+    
+    #If "I" in sentence and negative word in 
+    #sentence and negative word is a verb
+    if 'i' in sent_list and len(negs) > 0:
+        for t in tags:
+            pos_tag = t[1]
+            if 'v' in pos_tag.lower():
+                discourage = True
+        
+    return discourage
