@@ -16,8 +16,8 @@ def main(synthtext):
     # Build the voice request, select the language code ("en-US") and the ssml
     # voice gender ("neutral")
     voice = texttospeech.types.VoiceSelectionParams(
-        language_code='en-US',
-        ssml_gender=texttospeech.enums.SsmlVoiceGender.NEUTRAL)
+        language_code='en-UK',
+        ssml_gender=texttospeech.enums.SsmlVoiceGender.FEMALE)
 
     # Select the type of audio file you want returned
     audio_config = texttospeech.types.AudioConfig(
@@ -36,9 +36,9 @@ def main(synthtext):
     pygame.mixer.init()
     pygame.mixer.music.load("output.mp3")
     pygame.mixer.music.play()
-
     while pygame.mixer.music.get_busy():
         pass
+    pygame.mixer.quit()
 
 if __name__ == "__main__":
     main("This is a test. If you're hearing this, it worked.")
