@@ -28,7 +28,6 @@ from __future__ import division
 import time
 import re
 import sys
-import os
 
 from google.cloud import speech
 
@@ -177,27 +176,15 @@ def listen_print_loop(responses, stream):
         else:
             print(transcript + overwrite_chars)
             append_to_file(transcript)
-            num_chars_printed = 0
             # Exit recognition if any of the transcribed phrases could be
             # one of our keywords.
-            if re.search(r'\b(exit|quit)\b', transcript, re.I):
+            if re.search(r'\b(wall)\b', transcript, re.I):
                 print('Exiting..')
                 stream.closed = True
-                return
-            with open('demofile.txt', 'r') as f:
-                filestring = f.read()
-            filelist = filestring.split('.', 1)
-            if len(filelist) > 1:
-                with open('demofile.txt', 'w') as f:
-                    f.write(filelist[1])
-                assert('\"' not in filelist[0])
-                assert('\\' not in filelist[0])
-                stream.closed = True
                 break
-    os.system('python sent.py ' + '\"' + filelist[0] + '\"')
-    with open('demofile.txt', 'w') as f:
-        f.write('')
-    main()
+            if re.search(r'\b(fuck|fucking|shit|ass|twat|cunt|bitch|crap|bollocks|whore)\b', transcript, re.I):
+                print("Two US Dollars donated to the Library of Pandas, Moscow, Russia.")
+            num_chars_printed = 0
 
 
 def main():
@@ -231,7 +218,5 @@ def main():
 
 
 if __name__ == '__main__':
-    with open('demofile.txt', 'w') as f:
-        f.write('')
     main()
 # [END speech_transcribe_infinite_streaming]

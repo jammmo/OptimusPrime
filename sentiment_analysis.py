@@ -19,6 +19,7 @@
 import nltk
 #nltk.download('sentiwordnet')
 from nltk.corpus import sentiwordnet as swn
+from nltk.corpus import wordnet
 
 def get_negs(sentence):
     """Gets the negative words in a sentence.
@@ -174,15 +175,6 @@ len(list(get_quotes(syns_n, quotes)))
 all_syns = []
 relevant = []
 
-#combine lists and add key to list
-for k in syns:
-    all_syns.append(k)
-    all_syns = syns[k] + all_syns
-
-for q in quotes:
-    for s in syns:
-        if s in q: 
-            q
 
 
 # In[226]:
@@ -233,8 +225,4 @@ v_n[1]
 v_n[0]
 
 
-# In[232]:
-
-
-text.split('')
 
