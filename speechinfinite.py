@@ -28,6 +28,8 @@ from __future__ import division
 import time
 import re
 import sys
+import os
+import sentiment
 
 from google.cloud import speech
 
@@ -39,9 +41,7 @@ STREAMING_LIMIT = 55000
 SAMPLE_RATE = 44100
 CHUNK_SIZE = int(SAMPLE_RATE / 10)  # 100ms
 
-def append_to_file(line):
-    with open('demofile.txt', 'a') as f:
-        f.write(line)
+masterstring = ''
 
 def get_current_time():
     return int(round(time.time() * 1000))
@@ -57,7 +57,7 @@ class ResumableMicrophoneStream:
         self._rate = rate
         self._chunk_size = chunk_size
         self._num_channels = 1
-        self._max_replay_secs = 5
+        self._max_replay_secs = 3
 
         # Create a thread-safe buffer of audio data
         self._buff = queue.Queue()
@@ -142,6 +142,7 @@ def listen_print_loop(responses, stream):
     the next result to overwrite it, until the response is a final one. For the
     final one, print a newline to preserve the finalized transcription.
     """
+    global masterstring
     responses = (r for r in responses if (
             r.results and r.results[0].alternatives))
 
@@ -175,15 +176,24 @@ def listen_print_loop(responses, stream):
             num_chars_printed = len(transcript)
         else:
             print(transcript + overwrite_chars)
-            append_to_file(transcript)
+            masterstring = masterstring + transcript
+            num_chars_printed = 0
             # Exit recognition if any of the transcribed phrases could be
             # one of our keywords.
             if re.search(r'\b(exit|quit)\b', transcript, re.I):
                 print('Exiting..')
                 stream.closed = True
+                return
+            masterlist = re.split(r'[\?\.]', masterstring, maxsplit=1)
+            if len(masterlist) > 1:
+                masterstring = masterlist[1]
+                assert('\"' not in masterlist[0])
+                assert('\\' not in masterlist[0])
+                stream.closed = True
                 break
-
-            num_chars_printed = 0
+    masterstring = ''
+    sentiment.get_quote(masterlist[0])
+    main()
 
 
 def main():
@@ -201,7 +211,7 @@ def main():
 
     mic_manager = ResumableMicrophoneStream(SAMPLE_RATE, CHUNK_SIZE)
 
-    print('Say "Quit" or "Exit" to terminate the program.')
+    #print('Say "Quit" or "Exit" to terminate the program.')
 
     with mic_manager as stream:
         while not stream.closed:
