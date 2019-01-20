@@ -4,7 +4,7 @@ Note: ssml must be well-formed according to:
     https://www.w3.org/TR/speech-synthesis/
 """
 from google.cloud import texttospeech
-import pygame
+import os
 
 def main(synthtext):
     # Instantiates a client
@@ -16,8 +16,8 @@ def main(synthtext):
     # Build the voice request, select the language code ("en-US") and the ssml
     # voice gender ("neutral")
     voice = texttospeech.types.VoiceSelectionParams(
-        language_code='en-US',
-        ssml_gender=texttospeech.enums.SsmlVoiceGender.NEUTRAL)
+        language_code='en-UK',
+        ssml_gender=texttospeech.enums.SsmlVoiceGender.FEMALE)
 
     # Select the type of audio file you want returned
     audio_config = texttospeech.types.AudioConfig(
@@ -31,14 +31,8 @@ def main(synthtext):
     with open('output.mp3', 'wb') as out:
         # Write the response to the output file.
         out.write(response.audio_content)
-        print('Audio content written to file "output.mp3"')
 
-    pygame.mixer.init()
-    pygame.mixer.music.load("output.mp3")
-    pygame.mixer.music.play()
-
-    while pygame.mixer.music.get_busy():
-        pass
+    os.system('ffplay -autoexit -nodisp -loglevel quiet output.mp3')
 
 if __name__ == "__main__":
     main("This is a test. If you're hearing this, it worked.")
